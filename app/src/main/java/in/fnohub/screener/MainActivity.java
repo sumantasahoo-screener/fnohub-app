@@ -25,7 +25,6 @@ public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private ProgressBar pageProgressBar;
     private RelativeLayout splashLayout;
     private RelativeLayout offlineLayout;
     private Button btnRetry;
@@ -43,7 +42,6 @@ public class MainActivity extends AppCompatActivity {
         // Bind Views
         webView = findViewById(R.id.webview);
         swipeRefreshLayout = findViewById(R.id.swipe_refresh);
-        pageProgressBar = findViewById(R.id.page_progress);
         splashLayout = findViewById(R.id.splash_layout);
         offlineLayout = findViewById(R.id.offline_layout);
         btnRetry = findViewById(R.id.btn_retry);
@@ -116,13 +114,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
-                pageProgressBar.setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                pageProgressBar.setVisibility(View.GONE);
                 swipeRefreshLayout.setRefreshing(false);
 
                 if (isFirstLoad) {
@@ -172,12 +168,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(WebView view, int newProgress) {
                 super.onProgressChanged(view, newProgress);
-                pageProgressBar.setProgress(newProgress);
-                if (newProgress == 100) {
-                    pageProgressBar.setVisibility(View.GONE);
-                } else {
-                    pageProgressBar.setVisibility(View.VISIBLE);
-                }
             }
         });
     }
@@ -210,7 +200,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showOfflineScreen() {
-        pageProgressBar.setVisibility(View.GONE);
         swipeRefreshLayout.setRefreshing(false);
         if (isFirstLoad) {
             splashLayout.setVisibility(View.GONE);
