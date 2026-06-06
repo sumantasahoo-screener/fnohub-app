@@ -114,6 +114,67 @@
                 android:textColor="@color/white"
                 android:textStyle="bold" />
         </LinearLayout>
-    </RelativeLayout>
+    <!-- Floating Navigation Bar -->
+    <LinearLayout
+        android:id="@+id/floating_nav_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_floating_bar"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:elevation="6dp"
+        android:visibility="invisible">
+
+        <ImageButton
+            android:id="@+id/nav_back"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_back"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:padding="12dp"
+            android:tint="@color/text_main" />
+
+        <ImageButton
+            android:id="@+id/nav_forward"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_forward"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Forward"
+            android:padding="12dp"
+            android:tint="@color/text_main" />
+
+        <ImageButton
+            android:id="@+id/nav_home"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_home"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Home"
+            android:padding="12dp"
+            android:tint="@color/text_main" />
+
+        <ImageButton
+            android:id="@+id/nav_refresh"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_refresh"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Refresh"
+            android:padding="12dp"
+            android:tint="@color/text_main" />
+
+    </LinearLayout>
 
 </RelativeLayout>

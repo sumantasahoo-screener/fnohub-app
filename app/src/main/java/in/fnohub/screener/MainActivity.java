@@ -14,6 +14,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
     private RelativeLayout splashLayout;
     private RelativeLayout offlineLayout;
     private Button btnRetry;
+    private LinearLayout floatingNavBar;
+    private ImageButton navBack, navForward, navHome, navRefresh;
     
     private boolean isFirstLoad = true;
     private final String TARGET_URL = "https://fnohub.in/";
@@ -43,6 +47,43 @@ public class MainActivity extends AppCompatActivity {
         splashLayout = findViewById(R.id.splash_layout);
         offlineLayout = findViewById(R.id.offline_layout);
         btnRetry = findViewById(R.id.btn_retry);
+        floatingNavBar = findViewById(R.id.floating_nav_bar);
+        navBack = findViewById(R.id.nav_back);
+        navForward = findViewById(R.id.nav_forward);
+        navHome = findViewById(R.id.nav_home);
+        navRefresh = findViewById(R.id.nav_refresh);
+
+        navBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (webView.canGoBack()) {
+                    webView.goBack();
+                }
+            }
+        });
+
+        navForward.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (webView.canGoForward()) {
+                    webView.goForward();
+                }
+            }
+        });
+
+        navHome.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                webView.loadUrl(TARGET_URL);
+            }
+        });
+
+        navRefresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                webView.reload();
+            }
+        });
 
         setupWebView();
         setupSwipeRefresh();
@@ -97,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onAnimationEnd(Animation animation) {
                             splashLayout.setVisibility(View.GONE);
                             webView.setVisibility(View.VISIBLE);
+                            floatingNavBar.setVisibility(View.VISIBLE);
                         }
 
                         @Override
@@ -159,6 +201,9 @@ public class MainActivity extends AppCompatActivity {
         if (isNetworkAvailable()) {
             offlineLayout.setVisibility(View.GONE);
             webView.loadUrl(TARGET_URL);
+            if (!isFirstLoad) {
+                floatingNavBar.setVisibility(View.VISIBLE);
+            }
         } else {
             showOfflineScreen();
         }
@@ -171,6 +216,7 @@ public class MainActivity extends AppCompatActivity {
             splashLayout.setVisibility(View.GONE);
         }
         webView.setVisibility(View.INVISIBLE);
+        floatingNavBar.setVisibility(View.GONE);
         offlineLayout.setVisibility(View.VISIBLE);
     }
 
