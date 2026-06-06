@@ -1,11 +1,15 @@
 package in.fnohub.screener;
 
 import android.app.AlertDialog;
+import android.app.UiModeManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -16,9 +20,9 @@ import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class MainActivity extends AppCompatActivity {
@@ -30,12 +34,23 @@ public class MainActivity extends AppCompatActivity {
     private Button btnRetry;
     private LinearLayout floatingNavBar;
     private ImageButton navBack, navForward, navHome, navRefresh;
-    
+    private GestureDetector gestureDetector;
+
     private boolean isFirstLoad = true;
     private final String TARGET_URL = "https://fnohub.in/";
 
+    // Swipe gesture thresholds
+    private static final int SWIPE_MIN_DISTANCE = 120;
+    private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+    private static final int SWIPE_EDGE_ZONE = 80; // pixels from left edge
+    private float swipeStartX = 0;
+    private float swipeStartY = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Auto Dark/Light mode based on system theme
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -51,50 +66,47 @@ public class MainActivity extends AppCompatActivity {
         navHome = findViewById(R.id.nav_home);
         navRefresh = findViewById(R.id.nav_refresh);
 
-        navBack.setOnClickListener(new View.OnClickListener() {
+        // Setup gesture detector for swipe-back
+        gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
             @Override
-            public void onClick(View v) {
-                if (webView.canGoBack()) {
-                    webView.goBack();
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                if (e1 == null || e2 == null) return false;
+                float diffX = e2.getX() - e1.getX();
+                float diffY = e2.getY() - e1.getY();
+                // Only accept swipe from left edge
+                if (e1.getX() < SWIPE_EDGE_ZONE) {
+                    if (Math.abs(diffX) > Math.abs(diffY) &&
+                        Math.abs(diffX) > SWIPE_MIN_DISTANCE &&
+                        Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY &&
+                        diffX > 0) {
+                        // Left-edge right swipe → go back
+                        if (webView.canGoBack()) {
+                            webView.goBack();
+                        }
+                        return true;
+                    }
                 }
+                return false;
             }
         });
 
-        navForward.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (webView.canGoForward()) {
-                    webView.goForward();
-                }
-            }
-        });
+        // Navigation bar button listeners
+        navBack.setOnClickListener(v -> { if (webView.canGoBack()) webView.goBack(); });
+        navForward.setOnClickListener(v -> { if (webView.canGoForward()) webView.goForward(); });
+        navHome.setOnClickListener(v -> webView.loadUrl(TARGET_URL));
+        navRefresh.setOnClickListener(v -> webView.reload());
 
-        navHome.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                webView.loadUrl(TARGET_URL);
-            }
-        });
-
-        navRefresh.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                webView.reload();
-            }
-        });
+        btnRetry.setOnClickListener(v -> tryLoadWebsite());
 
         setupWebView();
         setupSwipeRefresh();
-        
-        btnRetry.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                tryLoadWebsite();
-            }
-        });
-
-        // Initial Load
         tryLoadWebsite();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        gestureDetector.onTouchEvent(event);
+        return super.dispatchTouchEvent(event);
     }
 
     private void setupWebView() {
@@ -110,6 +122,14 @@ public class MainActivity extends AppCompatActivity {
         settings.setAllowFileAccess(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
+        // Force dark mode in WebView if system is in dark mode
+        if (AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES ||
+            (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                settings.setForceDark(WebSettings.FORCE_DARK_ON);
+            }
+        }
+
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
@@ -123,22 +143,17 @@ public class MainActivity extends AppCompatActivity {
 
                 if (isFirstLoad) {
                     isFirstLoad = false;
-                    // Fade out splash screen
                     AlphaAnimation fadeOut = new AlphaAnimation(1.0f, 0.0f);
                     fadeOut.setDuration(500);
                     fadeOut.setAnimationListener(new Animation.AnimationListener() {
-                        @Override
-                        public void onAnimationStart(Animation animation) {}
-
+                        @Override public void onAnimationStart(Animation animation) {}
                         @Override
                         public void onAnimationEnd(Animation animation) {
                             splashLayout.setVisibility(View.GONE);
                             webView.setVisibility(View.VISIBLE);
                             floatingNavBar.setVisibility(View.VISIBLE);
                         }
-
-                        @Override
-                        public void onAnimationRepeat(Animation animation) {}
+                        @Override public void onAnimationRepeat(Animation animation) {}
                     });
                     splashLayout.startAnimation(fadeOut);
                 }
@@ -147,7 +162,6 @@ public class MainActivity extends AppCompatActivity {
             @SuppressWarnings("deprecation")
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                // Connection or host errors
                 if (errorCode == ERROR_HOST_LOOKUP || errorCode == ERROR_CONNECT || errorCode == ERROR_TIMEOUT) {
                     showOfflineScreen();
                 }
@@ -174,15 +188,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupSwipeRefresh() {
         swipeRefreshLayout.setColorSchemeResources(R.color.accent_cyan, R.color.accent_blue);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                if (isNetworkAvailable()) {
-                    webView.reload();
-                } else {
-                    swipeRefreshLayout.setRefreshing(false);
-                    showOfflineScreen();
-                }
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            if (isNetworkAvailable()) {
+                webView.reload();
+            } else {
+                swipeRefreshLayout.setRefreshing(false);
+                showOfflineScreen();
             }
         });
     }
@@ -210,9 +221,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (connectivityManager != null) {
-            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm != null) {
+            NetworkInfo activeNetworkInfo = cm.getActiveNetworkInfo();
             return activeNetworkInfo != null && activeNetworkInfo.isConnected();
         }
         return false;
@@ -223,20 +234,15 @@ public class MainActivity extends AppCompatActivity {
         if (webView.getVisibility() == View.VISIBLE && webView.canGoBack()) {
             webView.goBack();
         } else {
-            showExitConfirmationDialog();
+            showExitDialog();
         }
     }
 
-    private void showExitConfirmationDialog() {
+    private void showExitDialog() {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.app_name)
                 .setMessage(R.string.exit_confirm)
-                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                })
+                .setPositiveButton(R.string.yes, (dialog, which) -> finish())
                 .setNegativeButton(R.string.no, null)
                 .show();
     }
