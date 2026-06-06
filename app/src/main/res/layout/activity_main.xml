@@ -104,6 +104,8 @@
                 android:textColor="@color/white"
                 android:textStyle="bold" />
         </LinearLayout>
+    </RelativeLayout>
+
     <!-- Floating Navigation Bar -->
     <LinearLayout
         android:id="@+id/floating_nav_bar"
