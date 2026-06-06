@@ -130,6 +130,16 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        // Enable File Downloads in WebView
+        webView.setDownloadListener(new android.webkit.DownloadListener() {
+            @Override
+            public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
+                android.content.Intent i = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+                i.setData(android.net.Uri.parse(url));
+                startActivity(i);
+            }
+        });
+
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
