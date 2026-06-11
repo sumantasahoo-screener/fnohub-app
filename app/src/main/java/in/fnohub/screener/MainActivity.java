@@ -112,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
     private void setupWebView() {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
+        settings.setUserAgentString(settings.getUserAgentString() + " FnOHubApp/1.0");
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
         settings.setSupportZoom(true);
