@@ -186,6 +186,25 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, android.webkit.WebResourceRequest request) {
+                String url = request.getUrl().toString();
+                // Open tg:// and t.me links in Telegram App
+                if (url.startsWith("tg://") || url.startsWith("tg:") || url.contains("t.me/") || url.contains("telegram.me/")) {
+                    try {
+                        android.content.Intent intent = new android.content.Intent(
+                            android.content.Intent.ACTION_VIEW,
+                            android.net.Uri.parse(url)
+                        );
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        // Telegram not installed
+                    }
+                    return true;
+                }
+                return false;
+            }
         });
 
         webView.setWebChromeClient(new WebChromeClient() {
